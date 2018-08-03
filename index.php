@@ -1,17 +1,4 @@
-<?php 
-  session_start(); 
 
-
-  if (!isset($_SESSION['username'])) {
-  	$_SESSION['msg'] = "You must log in first";
-  	header('location: login.php');
-  }
-  if (isset($_GET['logout'])) {
-  	session_destroy();
-  	unset($_SESSION['username']);
-  	header("location: login.php");
-  }
-?>
 <!DOCTYPE html>
 <head>
  
@@ -39,7 +26,7 @@
 <html>
 
     <header style='text-align:center;background-color:#13683f;'>
-        <img src="Untitled-3.png"  />
+        <img src="header.png"  />
     </header
 </html>
   <body class="bg-light" >
@@ -49,6 +36,7 @@
 
       <div class="my-3 p-3 bg-white rounded box-shadow">
         
+		<div id="chartContainer" style="float:right;height: 300px; width: 300PX;"></div>
 		<form method="post" class="form-horizontal">
 		<fieldset>
 
@@ -67,21 +55,24 @@
           $check_query = "SELECT * FROM area";
 		$result = mysqli_query($db, $check_query);
 			
-       
-		
+        
+		echo "<option value=  0 > Select </option>";
 		while ($row = mysqli_fetch_assoc($result)) {
-      echo "<option value= '" . $row['Name'] ."'>" . $row['Name'] . "</option>";
-	  
-
+			if( $_POST['select_btn'] == $row['Name'] ){
+				echo "<option value= '" . $row['Name'] . "'selected >" . $row['Name'] . "</option>";
+			}else
+      echo "<option value= '" . $row['Name'] . "'>" . $row['Name'] . "</option>";
 	  
 		}
-		
+
 		echo '</select>';
+		 
+		 
 		
 		//$area = $_POST['select_btn'];
 		//echo $area;
 	  ?>
-    
+	
   </div>
 </div>
 
@@ -91,7 +82,6 @@
     <button id="singlebutton" name="area_btn" class="btn btn-primary">Search</button>
   </div>
 </div>
-
 </fieldset>
 </form>
         
@@ -102,12 +92,12 @@
 		 if (!empty($_POST['select_btn'])) {
 			 $area = $_POST['select_btn'];
 		 $db = mysqli_connect('localhost', 'root', '123', 'systemdb');
-        $check_query = "SELECT * FROM tank WHERE Area='$area'";
+        $check_query = "SELECT * FROM tank WHERE Area='$area'  ORDER BY Used DESC";
 		$result = mysqli_query($db, $check_query);
 		 }
 		?>
         
-      <table class="table" style="">		  <thead>			<tr>			 			  <th> ID </th>			  <th>Location</th>			  <th>Capacity</th>     	  <th>temperature <img src="Temp-small.png" alt=""width='8px' style="" /></th>		    <th>humidity<img src="hum.png" alt=""width='15px' style="" /></th>          <th>longitude</th>          <th>latitude</th>        </tr>		  </thead>		  <tbody>			<?php while ($row = mysqli_fetch_assoc($result)) { echo "<tr>";  echo "<td>".$row['ID']."</td>";  echo "<td>".$row['Area']."</td>";  echo "<td>".$row['percentage']."</td>"; echo "<td>".$row['Temp']."</td>"; echo "<td>".$row['humidity']."</td>"; echo "<td>".$row['longitude']."</td>"; echo "<td>".$row['latitude']."</td>"; echo "</tr>";} ?>		  </tbody>		</table></div>
+      <table class="table" style="">		  <thead>			<tr>			 			  <th> ID </th>			  <th>Location</th>			  <th>Capacity <img src="capacity.png" width='20px' height='25px;'/> </th>          <th>Used <img src="usage.png" width="20px" height='25px' /></th>    	  <th>out of box <img src="usage.png" width="20px" height='25px' /></th>        <th>temperature <img src="Temp.png" width='8px'/></th>		    <th>humidity<img src="hum.png" alt=""width='15px' style="" /></th>                </tr>		  </thead>		  <tbody>			<?php while ($row = mysqli_fetch_assoc($result)) { echo "<tr>";  echo "<td>".$row['ID']."</td>";  echo "<td>".$row['Area']."</td>";  echo "<td>".$row['percentage']."</td>"; echo "<td>".$row['Used']."</td>";echo "<td>".$row['outofbox']."</td>"; echo "<td>".$row['Temp']."</td>"; echo "<td>".$row['humidity']."</td>"; echo "</tr>";} ?>		  </tbody>		</table></div>
 	 
         
       </div>
@@ -128,16 +118,43 @@
 // Initialize and add the map
 function initMap() {
   // The location of Uluru
+  <?php
   
-  var uluru = {lat: 21.416334	, lng: 39.888230};
-  var uluru2 = {lat: 21.416576	, lng: 39.888002};
+     $db = mysqli_connect('localhost', 'root', '123', 'systemdb');
+        $check_query = "SELECT * FROM tank WHERE Area='$area'";
+		$result = mysqli_query($db, $check_query);
+		 $i = 0;
+  while ($row = mysqli_fetch_assoc($result)) {
+	  if($i == 0){
+		  echo" var uluru = {lat:".$row['longitude'].", lng:".$row['latitude']."};";
+	  }
+	  else
+  echo" var uluru".$row['ID']."= {lat:".$row['longitude'].", lng:".$row['latitude']."};";
+   $i++;
+  
+  }
+  //var uluru2 = {lat: 21.416576	, lng: 39.888002}; 
+  ?>
   // The map, centered at Uluru
   var map = new google.maps.Map(
       document.getElementById('map'), {zoom: 15, center: uluru});
   // location
+  <?php
+  $db = mysqli_connect('localhost', 'root', '123', 'systemdb');
+        $check_query = "SELECT * FROM tank WHERE Area='$area'";
+		$result = mysqli_query($db, $check_query);
+		$i = 0;
+  while ($row = mysqli_fetch_assoc($result)) {
+	   if($i == 0){
+  echo "var marker = new google.maps.Marker({position: uluru, map: map});";
+	   }else
+   echo "var marker = new google.maps.Marker({position: uluru".$row['ID'].", map: map});";
+  $i++;
+  }
+  //var marker = new google.maps.Marker({position: uluru2, map: map});
+  ?>
   
-  var marker = new google.maps.Marker({position: uluru, map: map});
-  var marker = new google.maps.Marker({position: uluru2, map: map});
+
 }
     </script>
     <!--Load the API from the specified URL
@@ -148,6 +165,51 @@ function initMap() {
     <script async defer
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB4WocNf_2el4f-HgmuaUzR2aL77Pb8mrE&callback=initMap">
     </script>
+	
+	
+	<?php
+		$db = mysqli_connect('localhost', 'root', '123', 'systemdb');
+        $check_query = "SELECT sum(percentage) AS 	Capacity,sum(Used) AS Used FROM tank WHERE Area='$area' GROUP BY Area";
+		$result = mysqli_query($db, $check_query);
+		while ($row = mysqli_fetch_assoc($result)) {
+	  
+		  $dataPoints = array( 
+	//array("label"=>"Used", "y"=>),
+		//array("label"=>"Temp", "y"=>),
+	//array("label"=>"humidity", "y"=>),
+	array("label"=>"Remaining Capacity", "y"=>$row['Capacity']-$row['Used']),
+	//array("label"=>"Safari", "y"=>6.08),
+	//array("label"=>"Temp", "y"=>$row['Temp']),
+	array("label"=>"Used", "y"=>$row['Used'])
+	);
+		}
+
+
+?>
+	
+	<script>
+window.onload = function() {
+ 
+ 
+var chart = new CanvasJS.Chart("chartContainer", {
+	animationEnabled: true,
+	title: {
+		text: "Status"
+	},
+
+	data: [{
+		type: "pie",
+		yValueFormatString: "#,##0.00\"\"",
+		indexLabel: "{label} ({y})",
+
+		dataPoints: <?php echo json_encode($dataPoints, JSON_NUMERIC_CHECK); ?>
+	}]
+});
+chart.render();
+ 
+}
+</script>
+	
 	
     </main>  
 	  
@@ -162,6 +224,7 @@ function initMap() {
     <script src="https://cdn.jsdelivr.net/npm/holderjs@2.9.4/holder.js"></script>
     <script src="offcanvas.js"></script>
   
+<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
 
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" preserveAspectRatio="none" style="display: none; visibility: hidden; position: absolute; top: -100%; left: -100%;"><defs><style type="text/css"></style></defs><text x="0" y="2" style="font-weight:bold;font-size:2pt;font-family:Arial, Helvetica, Open Sans, sans-serif">32x32</text></svg><div class="card" style="">		  		  		</div></body>
 </html>
